@@ -4,7 +4,7 @@ Tested on Ubuntu 16.04.7 LTS
 
 ## 1. Setup
 
-### 1.1 install required development tools
+### 1.1 Install required development tools
 
 Make sure the required development tools are installed:
 
@@ -25,7 +25,7 @@ git submodule init
 git submodule update
 ```
 
-### 1.2 build & install MyRocks
+### 1.2 Build & Install MyRocks
 
 Run cmake 
 
@@ -49,7 +49,7 @@ sudo make install
 ```
 
 
-### 1.3 Initialize & Run MyRocks
+### 1.3 Initialize & Run MyRocks daemon
 
 Go to `/usr/local/mysql` and initialize MyRocks with following commands.
 
