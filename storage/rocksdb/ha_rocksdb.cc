@@ -83,6 +83,11 @@
 #include "./rdb_psi.h"
 #include "./rdb_threads.h"
 
+/* Key-value tracing includes */
+#include "rocksdb/status.h"
+#include "rocksdb/trace_reader_writer.h"
+#include "db/db_impl/db_impl.h"
+
 // Internal MySQL APIs not exposed in any header.
 extern "C" {
 /**
@@ -5684,6 +5689,21 @@ static int rocksdb_init_func(void *const p) {
   }
   cf_manager.init(std::move(cf_options_map), &cf_handles);
 
+  // KEY-VALUE COMMAND TRACING START CODE
+  rocksdb::Options opt;
+  rocksdb::Env* env = rocksdb::Env::Default();
+  rocksdb::EnvOptions env_options(opt);
+  std::string trace_path = "/usr/local/mysql/trace_test";
+  std::unique_ptr<rocksdb::TraceWriter> trace_writer;
+
+  rocksdb::Status s0 = rocksdb::NewFileTraceWriter(env, env_options, trace_path, &trace_writer);
+  std::cerr << "NewFileTraceWriter Status: "<< s0.code() << ", " << s0.subcode() << std::endl;
+
+  rocksdb::TraceOptions trace_opt;
+  rocksdb::DBImpl *db_ = (rocksdb::DBImpl*)(rdb->GetBaseDB());
+  s0 = db_->StartTrace(trace_opt, std::move(trace_writer));
+  std::cerr << "StartTrace Status: "<< s0.code() << ", " << s0.subcode() << std::endl;
+   
   // NO_LINT_DEBUG
   sql_print_information("RocksDB: Initializing data dictionary...");
 
@@ -5872,6 +5892,11 @@ static int rocksdb_done_func(void *const p) {
   DBUG_ENTER_FUNC();
 
   int error = 0;
+   
+  // KEY-VALUE COMMAND TRACING END CODE
+  rocksdb::DBImpl *db_ = (rocksdb::DBImpl*)(rdb->GetBaseDB());
+  rocksdb::Status s0 = db_->EndTrace();
+  std::cerr << "EndTrace Status: "<< s0.code() << ", " << s0.subcode() << std::endl;
 
   // signal the drop index thread to stop
   rdb_drop_idx_thread.signal(true);
